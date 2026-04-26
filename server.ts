@@ -47,11 +47,11 @@ async function startServer() {
   });
 
   app.get("/api/admin/logs", (req, res) => {
-    const envUsername = process.env.ADMIN_USERNAME || "Farel";
-    const envPassword = process.env.ADMIN_PASSWORD || "MuhFarel05";
+    const envUsername = process.env.ADMIN_USERNAME;
+    const envPassword = process.env.ADMIN_PASSWORD;
     const { user, pass } = req.query;
 
-    if (user === envUsername && pass === envPassword) {
+    if (user && pass && user === envUsername && pass === envPassword) {
       res.json({ status: 200, data: logs });
     } else {
       res.status(401).json({ status: 401, message: "Unauthorized" });
@@ -60,10 +60,10 @@ async function startServer() {
 
   app.post("/api/admin/login", (req, res) => {
     const { username, password } = req.body;
-    const envUsername = process.env.ADMIN_USERNAME || "Farel";
-    const envPassword = process.env.ADMIN_PASSWORD || "MuhFarel05";
+    const envUsername = process.env.ADMIN_USERNAME;
+    const envPassword = process.env.ADMIN_PASSWORD;
 
-    if (username === envUsername && password === envPassword) {
+    if (username && password && username === envUsername && password === envPassword) {
       res.json({ status: 200, message: "Login successful" });
     } else {
       res.status(401).json({ status: 401, message: "Invalid credentials" });

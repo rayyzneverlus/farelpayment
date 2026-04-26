@@ -36,7 +36,7 @@ FAREL PAYMENT adalah platform pembayaran digital modern yang dirancang untuk oto
 3.  **Environment Variables**
     Buat file `.env` di root folder dan masukkan data berikut:
     ```env
-    FR3_API_KEY=your_fr3_api_key_here
+    FR3_API_KEY= # Get your API Key at https://fr3newera.com
     ADMIN_USERNAME=
     ADMIN_PASSWORD=
     ```
