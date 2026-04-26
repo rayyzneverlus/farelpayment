@@ -37,8 +37,8 @@ FAREL PAYMENT adalah platform pembayaran digital modern yang dirancang untuk oto
     Buat file `.env` di root folder dan masukkan data berikut:
     ```env
     FR3_API_KEY=your_fr3_api_key_here
-    ADMIN_USERNAME=Farel
-    ADMIN_PASSWORD=MuhFarel05
+    ADMIN_USERNAME=
+    ADMIN_PASSWORD=
     ```
 
 4.  **Jalankan Aplikasi**
@@ -59,5 +59,5 @@ Klik tombol di bawah ini untuk langsung melakukan clone dan deploy ke akun Verce
 
 ---
 
-Developed with ❤️ by **Muhammad Farel Alamsyah**
+Developed with ❤️ by **Muhammad Farel**
 Powered by **FR3 NEWERA Digital Services**
