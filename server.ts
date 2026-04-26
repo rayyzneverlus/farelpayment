@@ -21,6 +21,55 @@ async function startServer() {
     return req.headers["x-api-key"] || DEFAULT_API_KEY;
   };
 
+  const logs: any[] = [];
+  const MAX_LOGS = 100;
+
+  app.use((req, res, next) => {
+    if (req.path.startsWith("/api/proxy")) {
+      const log = {
+        id: Math.random().toString(36).substr(2, 9),
+        timestamp: new Date().toISOString(),
+        method: req.method,
+        path: req.path,
+        status: 0,
+        payload: req.method === "POST" ? req.body : req.query,
+      };
+
+      const originalJson = res.json;
+      res.json = function(data) {
+        log.status = res.statusCode;
+        logs.unshift(log);
+        if (logs.length > MAX_LOGS) logs.pop();
+        return originalJson.call(this, data);
+      };
+    }
+    next();
+  });
+
+  app.get("/api/admin/logs", (req, res) => {
+    const envUsername = process.env.ADMIN_USERNAME || "Farel";
+    const envPassword = process.env.ADMIN_PASSWORD || "MuhFarel05";
+    const { user, pass } = req.query;
+
+    if (user === envUsername && pass === envPassword) {
+      res.json({ status: 200, data: logs });
+    } else {
+      res.status(401).json({ status: 401, message: "Unauthorized" });
+    }
+  });
+
+  app.post("/api/admin/login", (req, res) => {
+    const { username, password } = req.body;
+    const envUsername = process.env.ADMIN_USERNAME || "Farel";
+    const envPassword = process.env.ADMIN_PASSWORD || "MuhFarel05";
+
+    if (username === envUsername && password === envPassword) {
+      res.json({ status: 200, message: "Login successful" });
+    } else {
+      res.status(401).json({ status: 401, message: "Invalid credentials" });
+    }
+  });
+
   // API Proxy Routes
   app.get("/api/proxy/saldo", async (req, res) => {
     try {

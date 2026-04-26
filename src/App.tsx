@@ -45,49 +45,12 @@ export default function App() {
   // Admin States
   const [adminUser, setAdminUser] = useState("");
   const [adminPass, setAdminPass] = useState("");
+  const [adminError, setAdminError] = useState<string | null>(null);
   const [saldo, setSaldo] = useState(0);
   const [history, setHistory] = useState<Transaction[]>([]);
-  const [withdrawForm, setWithdrawForm] = useState({ ewallet: "dana", nomor: "", kode: "" });
+  const [logs, setLogs] = useState<any[]>([]);
   const [apiKey, setApiKey] = useState("");
 
-  const DANA_PRODUCTS = [
-    { id: "D1", name: "1.000", price: "1.150" },
-    { id: "D2", name: "2.000", price: "2.150" },
-    { id: "D3", name: "3.000", price: "3.150" },
-    { id: "D4", name: "4.000", price: "4.150" },
-    { id: "D5", name: "5.000", price: "5.150" },
-    { id: "D10", name: "10.000", price: "10.150" },
-    { id: "D15", name: "15.000", price: "15.150" },
-    { id: "D20", name: "20.000", price: "20.150" },
-    { id: "D25", name: "25.000", price: "25.150" },
-    { id: "D30", name: "30.000", price: "30.150" },
-    { id: "D35", name: "35.000", price: "35.150" },
-    { id: "D40", name: "40.000", price: "40.150" },
-    { id: "D45", name: "45.000", price: "45.150" },
-    { id: "D50", name: "50.000", price: "50.150" },
-    { id: "D55", name: "55.000", price: "55.150" },
-    { id: "D60", name: "60.000", price: "60.150" },
-    { id: "D65", name: "65.000", price: "65.150" },
-    { id: "D70", name: "70.000", price: "70.150" },
-    { id: "D75", name: "75.000", price: "75.150" },
-    { id: "D80", name: "80.000", price: "80.150" },
-    { id: "D85", name: "85.000", price: "85.150" },
-    { id: "D90", name: "90.000", price: "90.150" },
-    { id: "D95", name: "95.000", price: "95.150" },
-    { id: "D100", name: "100.000", price: "100.150" },
-    { id: "D125", name: "125.000", price: "125.150" },
-    { id: "D150", name: "150.000", price: "150.150" },
-    { id: "D200", name: "200.000", price: "200.150" },
-    { id: "D250", name: "250.000", price: "250.150" },
-    { id: "D300", name: "300.000", price: "300.150" },
-    { id: "D400", name: "400.000", price: "400.150" },
-    { id: "D500", name: "500.000", price: "500.150" },
-    { id: "D600", name: "600.000", price: "600.150" },
-    { id: "D700", name: "700.000", price: "700.150" },
-    { id: "D800", name: "800.000", price: "800.150" },
-    { id: "D900", name: "900.000", price: "900.150" },
-    { id: "D1000", name: "1.000.000", price: "1.000.150" },
-  ];
 
   const createPayment = async () => {
     if (!nominal || parseInt(nominal) < 1000) {
@@ -157,43 +120,39 @@ export default function App() {
   };
 
   // Admin Logic
-  const handleAdminLogin = () => {
-    if (adminUser === "Farel" && adminPass === "MuhFarel05") {
-      setView("admin-dashboard");
-      fetchAdminData();
-    } else {
-      alert("Username atau Password salah!");
+  const handleAdminLogin = async () => {
+    setIsLoading(true);
+    setAdminError(null);
+    try {
+      const res = await axios.post("/api/admin/login", { 
+        username: adminUser, 
+        password: adminPass 
+      });
+      if (res.data.status === 200) {
+        setView("admin-dashboard");
+        fetchAdminData();
+      }
+    } catch (err: any) {
+      setAdminError(err.response?.data?.message || "Invalid username or password");
+    } finally {
+      setIsLoading(false);
     }
   };
 
   const fetchAdminData = async () => {
     setIsLoading(true);
     try {
-      const [sRes, hRes] = await Promise.all([
+      const authParams = { user: adminUser, pass: adminPass };
+      const [sRes, hRes, lRes] = await Promise.all([
         axios.get("/api/proxy/saldo", { headers: apiKey ? { "x-api-key": apiKey } : {} }),
-        axios.get("/api/proxy/history", { headers: apiKey ? { "x-api-key": apiKey } : {} })
+        axios.get("/api/proxy/history", { headers: apiKey ? { "x-api-key": apiKey } : {} }),
+        axios.get("/api/admin/logs", { params: authParams })
       ]);
       if (sRes.data.status === 200) setSaldo(sRes.data.data.saldo);
       if (hRes.data.status === 200) setHistory(hRes.data.data);
+      if (lRes.data.status === 200) setLogs(lRes.data.data);
     } catch (err) {
       console.error(err);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleWithdraw = async () => {
-    if (!withdrawForm.nomor || !withdrawForm.kode) return;
-    setIsLoading(true);
-    try {
-      const res = await axios.get("/api/proxy/withdraw", {
-        params: withdrawForm,
-        headers: apiKey ? { "x-api-key": apiKey } : {}
-      });
-      alert(res.data.message || "Withdraw diproses");
-      fetchAdminData();
-    } catch (err) {
-      alert("Gagal withdraw");
     } finally {
       setIsLoading(false);
     }
@@ -413,11 +372,24 @@ export default function App() {
                     className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl px-5 py-4 text-sm font-bold outline-none focus:border-slate-900 transition-all"
                   />
                 </div>
+                
+                {adminError && (
+                  <motion.div 
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="bg-rose-50 border border-rose-100 p-4 rounded-xl flex items-center gap-2 text-rose-600 text-xs font-bold"
+                  >
+                    <AlertCircle size={14} />
+                    {adminError}
+                  </motion.div>
+                )}
+
                 <button 
+                  disabled={isLoading}
                   onClick={handleAdminLogin}
-                  className="w-full bg-slate-900 text-white font-black py-5 rounded-2xl hover:bg-black transition-all shadow-xl shadow-slate-200 mt-2 active:scale-95"
+                  className="w-full bg-slate-900 text-white font-black py-5 rounded-2xl hover:bg-black transition-all shadow-xl shadow-slate-200 mt-2 active:scale-95 disabled:opacity-50"
                 >
-                  ACCESS DASHBOARD
+                  {isLoading ? <Loader2 className="animate-spin mx-auto" /> : "ACCESS DASHBOARD"}
                 </button>
                 <button onClick={() => setView("user")} className="w-full text-slate-400 text-[10px] font-black uppercase tracking-widest hover:text-slate-600 transition-colors">
                   Return to Storefront
@@ -465,129 +437,55 @@ export default function App() {
                   </div>
                 </div>
 
-                <div className="bg-white rounded-3xl p-8 border border-slate-100 shadow-sm col-span-1 md:col-span-2">
-                   <div className="flex items-center justify-between mb-6">
-                     <h4 className="font-black text-slate-900 text-sm flex items-center gap-2">
-                       <Smartphone size={18} className="text-slate-400" /> WITHDRAW INSTANT
-                     </h4>
-                     <p className="text-[10px] text-slate-400 font-medium tracking-tight">PROCESS AT 1.150 FLAT RATE</p>
-                   </div>
-                   
-                   <div className="space-y-6">
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <div className="space-y-1.5">
-                          <label className="text-[10px] font-black text-slate-400 uppercase ml-1">Destination Number</label>
-                          <div className="relative">
-                            <input 
-                              value={withdrawForm.nomor}
-                              onChange={(e) => setWithdrawForm({...withdrawForm, nomor: e.target.value})}
-                              placeholder="0857..."
-                              className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl pl-10 pr-4 py-3.5 text-sm font-bold outline-none focus:border-indigo-500 transition-all focus:bg-white"
-                            />
-                            <Smartphone size={14} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300" />
-                          </div>
-                        </div>
-                        <div className="space-y-1.5 flex flex-col justify-end">
-                           <button 
-                            disabled={isLoading}
-                            onClick={() => {
-                              const code = "CEKD";
-                              if (withdrawForm.nomor) {
-                                 axios.post("/api/proxy/cek-ewallet", { code, dest: withdrawForm.nomor }, { headers: apiKey ? { "x-api-key": apiKey } : {} })
-                                  .then(res => alert(res.data.status === 200 ? `Account Holder: ${res.data.result}` : "Verification failed"))
-                                  .catch(() => alert("Network error"));
-                              } else { alert("Please enter destination number"); }
-                            }}
-                            className="bg-slate-100 text-slate-600 font-bold py-4 rounded-2xl hover:bg-slate-200 transition-all text-xs flex items-center justify-center gap-2 active:scale-95"
-                           >
-                             <UserSearch size={14} /> VERIFY DANA OWNER
-                           </button>
-                        </div>
-                      </div>
-
-                      <div className="space-y-3">
-                        <div className="flex items-center justify-between pr-2">
-                          <label className="text-[10px] font-black text-slate-400 uppercase ml-1">Select DANA Product</label>
-                          {withdrawForm.kode && <span className="text-[10px] font-black text-indigo-600 px-2 py-0.5 bg-indigo-50 rounded">SELECTED: {withdrawForm.kode}</span>}
-                        </div>
-                        <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-2 max-h-56 overflow-y-auto pr-2 custom-scrollbar">
-                           {DANA_PRODUCTS.map((prod) => (
-                             <button
-                              key={prod.id}
-                              onClick={() => setWithdrawForm({...withdrawForm, kode: prod.id})}
-                              className={cn(
-                                "flex flex-col items-center justify-center p-3 rounded-2xl border transition-all text-center gap-1",
-                                withdrawForm.kode === prod.id ? "bg-indigo-600 border-indigo-600 shadow-lg shadow-indigo-100 scale-105" : "bg-white border-slate-100 hover:border-indigo-200"
-                              )}
-                             >
-                               <div className={cn("text-[8px] font-black tracking-tighter uppercase", withdrawForm.kode === prod.id ? "text-indigo-200" : "text-slate-400")}>{prod.id}</div>
-                               <div className={cn("text-xs font-black", withdrawForm.kode === prod.id ? "text-white" : "text-slate-900")}>{prod.name}</div>
-                             </button>
-                           ))}
-                        </div>
-                      </div>
-
-                      <button 
-                        disabled={isLoading || !withdrawForm.nomor || !withdrawForm.kode}
-                        onClick={handleWithdraw}
-                        className="w-full bg-indigo-600 text-white font-black py-4 rounded-2xl hover:bg-indigo-700 shadow-xl shadow-indigo-100 transition-all flex items-center justify-center gap-2 active:scale-[0.98]"
-                      >
-                         {isLoading ? <Loader2 size={18} className="animate-spin" /> : <ArrowUpRight size={18} />}
-                         EXECUTE INSTANT PAYOUT
-                      </button>
-                   </div>
-                </div>
-              </div>
-
-              <div className="bg-white rounded-3xl border border-slate-100 overflow-hidden shadow-sm">
-                <div className="p-8 border-b border-slate-50 flex items-center justify-between">
-                  <h4 className="font-black text-slate-900 text-sm flex items-center gap-2">
-                    <History size={18} className="text-slate-400" /> TRANSACTION LEDGER
-                  </h4>
-                </div>
-                <div className="overflow-x-auto">
-                   <table className="w-full text-left">
-                     <thead>
-                       <tr className="bg-slate-50/50">
-                         <th className="px-8 py-4 text-[9px] font-black text-slate-400 uppercase tracking-widest">Descriptor</th>
-                         <th className="px-8 py-4 text-[9px] font-black text-slate-400 uppercase tracking-widest">Timestamp</th>
-                         <th className="px-8 py-4 text-[9px] font-black text-slate-400 uppercase tracking-widest text-right">Amount</th>
-                         <th className="px-8 py-4 text-[9px] font-black text-slate-400 uppercase tracking-widest">State</th>
-                       </tr>
-                     </thead>
-                     <tbody className="divide-y divide-slate-50">
-                       {history.map((trx) => (
-                         <tr key={trx.trxId} className="hover:bg-slate-50/30 transition-all">
-                           <td className="px-8 py-5">
-                             <p className="text-xs font-bold text-slate-800 tracking-tight">{trx.item || "System Transaction"}</p>
-                             <p className="text-[10px] font-mono text-indigo-500 uppercase font-black tracking-tighter">{trx.trxId}</p>
-                           </td>
-                           <td className="px-8 py-5">
-                             <p className="text-[10px] text-slate-400 font-bold">{formatDate(trx.date)}</p>
-                           </td>
-                           <td className="px-8 py-5 text-right">
-                             <p className={cn(
-                               "font-black text-sm tracking-tighter",
-                               (trx.type === "TOPUP" || trx.type === "TF_IN" || trx.type === "ADJUST_IN") ? "text-emerald-500" : "text-rose-500"
-                             )}>
-                               {(trx.type === "TOPUP" || trx.type === "TF_IN" || trx.type === "ADJUST_IN") ? "+" : "-"} {formatCurrency(trx.amount)}
-                             </p>
-                           </td>
-                           <td className="px-8 py-5">
-                             <span className={cn(
-                               "px-3 py-1 rounded-full text-[8px] font-black uppercase inline-flex items-center gap-1",
-                               trx.status === "SUCCESS" ? "bg-emerald-50 text-emerald-600" : 
-                               trx.status === "PENDING" ? "bg-amber-50 text-amber-600" : "bg-rose-50 text-rose-600"
-                             )}>
-                               {trx.status}
-                             </span>
-                           </td>
+                <div className="bg-white rounded-3xl border border-slate-100 shadow-sm col-span-1 md:col-span-2 overflow-hidden">
+                  <div className="p-8 border-b border-slate-50 flex items-center justify-between">
+                    <h4 className="font-black text-slate-900 text-sm flex items-center gap-2">
+                      <History size={18} className="text-slate-400" /> TRANSACTION HISTORY
+                    </h4>
+                    <span className="text-[10px] font-bold text-slate-400">RECENT 10 ENTRIES</span>
+                  </div>
+                  <div className="overflow-x-auto max-h-64 overflow-y-auto custom-scrollbar">
+                     <table className="w-full text-left">
+                       <thead>
+                         <tr className="bg-slate-50/50">
+                           <th className="px-8 py-4 text-[9px] font-black text-slate-400 uppercase tracking-widest">Descriptor</th>
+                           <th className="px-8 py-4 text-[9px] font-black text-slate-400 uppercase tracking-widest text-right">Amount</th>
+                           <th className="px-8 py-4 text-[9px] font-black text-slate-400 uppercase tracking-widest">State</th>
                          </tr>
-                       ))}
-                     </tbody>
-                   </table>
+                       </thead>
+                       <tbody className="divide-y divide-slate-50">
+                         {history.map((trx) => (
+                           <tr key={trx.trxId} className="hover:bg-slate-50/30 transition-all">
+                             <td className="px-8 py-5">
+                               <p className="text-xs font-bold text-slate-800 tracking-tight">{trx.item || "System Transaction"}</p>
+                               <p className="text-[10px] font-mono text-indigo-500 uppercase font-black tracking-tighter">{trx.trxId}</p>
+                             </td>
+                             <td className="px-8 py-5 text-right">
+                               <p className={cn(
+                                 "font-black text-xs tracking-tighter",
+                                 (trx.type === "TOPUP" || trx.type === "TF_IN" || trx.type === "ADJUST_IN") ? "text-emerald-500" : "text-rose-500"
+                               )}>
+                                 {(trx.type === "TOPUP" || trx.type === "TF_IN" || trx.type === "ADJUST_IN") ? "+" : "-"} {formatCurrency(trx.amount)}
+                               </p>
+                             </td>
+                             <td className="px-8 py-5">
+                               <span className={cn(
+                                 "px-3 py-1 rounded-full text-[8px] font-black uppercase inline-flex items-center gap-1",
+                                 trx.status === "SUCCESS" ? "bg-emerald-50 text-emerald-600" : 
+                                 trx.status === "PENDING" ? "bg-amber-50 text-amber-600" : "bg-rose-50 text-rose-600"
+                               )}>
+                                 {trx.status}
+                               </span>
+                             </td>
+                           </tr>
+                         ))}
+                       </tbody>
+                     </table>
+                  </div>
                 </div>
               </div>
+
+
             </motion.div>
           )}
         </AnimatePresence>

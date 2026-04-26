@@ -1,20 +1,63 @@
-<div align="center">
-<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
-</div>
+# 🚀 FAREL PAYMENT - QRIS Auto Payment System
 
-# Run and deploy your AI Studio app
+FAREL PAYMENT adalah platform pembayaran digital modern yang dirancang untuk otomatisasi top-up saldo dan transaksi menggunakan QRIS. Terintegrasi langsung dengan gateway **FR3 NEWERA** untuk proses realtime dan instan.
 
-This contains everything you need to run your app locally.
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/rayyzneverlus/farelpayment)
 
-View your app in AI Studio: https://ai.studio/apps/c24ae555-8314-4a5c-843a-9a5d37ebeab7
+## ✨ Fitur Utama
 
-## Run Locally
+-   **QRIS Dinamis**: Generate QRIS unik untuk setiap transaksi untuk verifikasi otomatis.
+-   **Admin Control Center**: Dashboard eksklusif untuk monitoring saldo dan riwayat transaksi.
+-   **Realtime Polling**: Sistem pengecekan status otomatis yang akurat.
+-   **Secure Login**: Sistem autentikasi admin yang aman melalui server-side verification.
+-   **Modern UI**: Desain minimalis dan elegan menggunakan Tailwind CSS & Framer Motion.
 
-**Prerequisites:**  Node.js
+## 🛠️ Teknologi yang Digunakan
 
+-   **Frontend**: React.js, Vite, TypeScript
+-   **Styling**: Tailwind CSS, Framer Motion
+-   **Icons**: Lucide React
+-   **Backend Proxy**: Express.js
+-   **Integration**: FR3 NEWERA Digital Services API
 
-1. Install dependencies:
-   `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
-3. Run the app:
-   `npm run dev`
+## 🚀 Cara Setup (Self-Host)
+
+1.  **Clone Repository**
+    ```bash
+    git clone https://github.com/rayyzneverlus/farelpayment.git
+    cd farelpayment
+    ```
+
+2.  **Install Dependencies**
+    ```bash
+    npm install
+    ```
+
+3.  **Environment Variables**
+    Buat file `.env` di root folder dan masukkan data berikut:
+    ```env
+    FR3_API_KEY=your_fr3_api_key_here
+    ADMIN_USERNAME=Farel
+    ADMIN_PASSWORD=MuhFarel05
+    ```
+
+4.  **Jalankan Aplikasi**
+    ```bash
+    npm run dev
+    ```
+
+## 🔒 Keamanan
+
+-   **API Proxying**: Semua request ke FR3 NEWERA dilewatkan melalui server backend untuk menyembunyikan API Key dari client-side (browser).
+-   **Hidden Credentials**: Username dan Password admin disimpan di environment variable, aman dari kebocoran saat source code dipublikasikan.
+
+## 🌐 Deploy ke Vercel
+
+Klik tombol di bawah ini untuk langsung melakukan clone dan deploy ke akun Vercel Anda secara otomatis:
+
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/rayyzneverlus/farelpayment)
+
+---
+
+Developed with ❤️ by **Muhammad Farel Alamsyah**
+Powered by **FR3 NEWERA Digital Services**
