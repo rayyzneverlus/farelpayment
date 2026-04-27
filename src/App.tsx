@@ -68,7 +68,9 @@ export default function App() {
         setError(res.data.message || "Gagal membuat pembayaran");
       }
     } catch (err: any) {
-      setError(err.response?.data?.message || "Terjadi kesalahan koneksi");
+      const msg = err.response?.data?.message || err.response?.data?.error || "Terjadi kesalahan koneksi (Server Error)";
+      setError(msg);
+      console.error("Payment Error:", err);
     } finally {
       setIsLoading(false);
     }
